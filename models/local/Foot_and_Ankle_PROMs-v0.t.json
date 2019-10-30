@@ -256,7 +256,7 @@
       }, {
         "@type" : "C_ARCHETYPE_ROOT",
         "rmTypeName" : "OBSERVATION",
-        "occurrences" : "0..*",
+        "occurrences" : "0..0",
         "nodeId" : "at0.8",
         "attributes" : [ ],
         "attributeTuples" : [ ],
@@ -290,7 +290,7 @@
         "at0000.1" : {
           "@type" : "ARCHETYPE_TERM",
           "code" : "at0000.1",
-          "text" : "Foot and ankle PROMs",
+          "text" : "UCLH Foot and ankle PROMs",
           "description" : "Document to communicate information to others, commonly in response to a request from another party."
         }
       },
