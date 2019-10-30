@@ -1,0 +1,6 @@
+select a, e/ehr_id/value as ehrid
+from EHR e
+contains COMPOSITION a[openEHR-EHR-COMPOSITION.report.v1]
+where
+    a/name/value='UCLH Foot and ankle PROMs' and
+    e/ehr_id/value='b80a3a97-be75-41c6-a497-6ed53ce8f8c6'

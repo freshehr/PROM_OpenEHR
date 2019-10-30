@@ -1,0 +1,20 @@
+select
+    e/ehr_id/value as ehrid,
+    a/uid/value as compId,
+    b_a/data[at0001]/origin/value as AOFAS_date,
+    b_a/data[at0001]/events[at0002]/data[at0003]/items[at0028]/value/value as AOFAS_1,
+    b_a/data[at0001]/events[at0002]/data[at0003]/items[at0033]/value/value as AOFAS_2,
+    b_a/data[at0001]/events[at0002]/data[at0003]/items[at0038]/value/value as AOFAS_3,
+    b_a/data[at0001]/events[at0002]/data[at0003]/items[at0043]/value/value as AOFAS_4,
+    b_a/data[at0001]/events[at0002]/data[at0003]/items[at0008]/value/magnitude as TotalScore,
+    b_b/items[at0001]/value/magnitude as PainScale,
+    b_c/items[at0001]/value/value as EpisodeId
+from EHR e
+contains COMPOSITION a[openEHR-EHR-COMPOSITION.report.v1]
+contains (
+    OBSERVATION b_a[openEHR-EHR-OBSERVATION.aofas.v0] and
+    CLUSTER b_b[openEHR-EHR-CLUSTER.pain_vas.v0] and
+    CLUSTER b_c[openEHR-EHR-CLUSTER.episode_details_northproms.v0])
+where
+    a/name/value='UCLH Foot and ankle PROMs'
+order by b_a/data[at0001]/origin/value ASC

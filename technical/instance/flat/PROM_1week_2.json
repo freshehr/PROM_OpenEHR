@@ -1,0 +1,19 @@
+{
+    "ctx/language": "en",
+    "ctx/territory": "GB",
+    "ctx/composer_name": "Sheila Nugget",
+    "ctx/composer_id": "123456",
+    "ctx/id_namespace": "NHS",
+    "ctx/id_scheme": "NHS",
+    "ctx/health_care_facility|name": "Northumbria Hospital",
+    "ctx/health_care_facility|id": "9091",
+    "ctx/time": "2019-10-20",
+    "uclh_foot_and_ankle_proms/context/episode_details/episode_identifier": "1 week post-operative",
+    "uclh_foot_and_ankle_proms/aofas_score/q1_pain|code": "at0032",
+    "uclh_foot_and_ankle_proms/aofas_score/q2_activity_limitations_and_support_requirements|code": "at0037",
+    "uclh_foot_and_ankle_proms/aofas_score/q3_walking|code": "at0042",
+    "uclh_foot_and_ankle_proms/aofas_score/q4_walking_surfaces|code": "at0046",
+    "uclh_foot_and_ankle_proms/aofas_score/total_score": 45,
+    "uclh_foot_and_ankle_proms/aofas_score/comment": "Happier still",
+    "uclh_foot_and_ankle_proms/pain_vas/pain_vas:0/pain_scale": 23
+}
