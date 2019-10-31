@@ -32,7 +32,7 @@ http://www.northlondonfootclinic.co.uk/download.php?download=hindfoot-surgery-as
 		["original_namespace"] = <"uk.org.clinicalmodels">
 		["original_publisher"] = <"UK Clinical Models">
 		["custodian_namespace"] = <"uk.org.clinicalmodels">
-		["MD5-CAM-1.0.1"] = <"15F3F798FEAD832164609AC430843C76">
+		["MD5-CAM-1.0.1"] = <"c463cca963a8dd3cb7b6dd2520cfab3e">
 		["build_uid"] = <"9707059b-757a-4281-b321-7d01008ef1d0">
 		["revision"] = <"0.0.1-alpha">
 	>
@@ -87,6 +87,18 @@ definition
 									ELEMENT[at0027] occurrences matches {0..1} matches {    -- Comment
 										value matches {
 											DV_TEXT matches {*}
+										}
+									}
+									ELEMENT[at0047] occurrences matches {0..1} matches {    -- Grade
+										value matches {
+											DV_CODED_TEXT matches {
+												defining_code matches {
+													[local::
+													at0048,    -- Mild
+													at0049,    -- Moderate
+													at0050]    -- Severe
+												}
+											}
 										}
 									}
 								}
@@ -239,6 +251,22 @@ ontology
 				["at0046"] = <
 					text = <"Severe difficulty on uneven surfaces">
 					description = <"The patient reports severe difficulty walking on uneven terrains, stairs, inclines or ladders.">
+				>
+				["at0047"] = <
+					text = <"Grade">
+					description = <"*">
+				>
+				["at0048"] = <
+					text = <"Mild">
+					description = <"*">
+				>
+				["at0049"] = <
+					text = <"Moderate">
+					description = <"*">
+				>
+				["at0050"] = <
+					text = <"Severe">
+					description = <"*">
 				>
 			>
 		>
