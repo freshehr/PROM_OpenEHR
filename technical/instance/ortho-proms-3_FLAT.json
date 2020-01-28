@@ -1,0 +1,31 @@
+{
+    "ctx/language": "en",
+    "ctx/territory": "GB",
+    "ctx/composer_name": "Silvia Blake",
+    "ctx/id_namespace": "HOSPITAL-NS",
+    "ctx/id_scheme": "HOSPITAL-NS",
+    "ctx/time": "2020-02-28",
+    "ctx/health_care_facility|name": "Home",
+    "ctx/health_care_facility|id": "0000",
+
+    "uclh_foot_and_ankle_proms/context/episode_details/episode_identifier": "1 week post-operative",
+    
+    "uclh_foot_and_ankle_proms/aofas_score/q1_pain|code": "at0029",
+    "uclh_foot_and_ankle_proms/aofas_score/q1_pain|ordinal": 40,
+
+    "uclh_foot_and_ankle_proms/aofas_score/q2_activity_limitations_and_support_requirements|code": "at0034",
+    "uclh_foot_and_ankle_proms/aofas_score/q2_activity_limitations_and_support_requirements|ordinal": 10,
+
+    "uclh_foot_and_ankle_proms/aofas_score/q3_walking|code": "at0040",
+    "uclh_foot_and_ankle_proms/aofas_score/q3_walking|ordinal": 4,
+
+    "uclh_foot_and_ankle_proms/aofas_score/q4_walking_surfaces|code": "at0044",
+    "uclh_foot_and_ankle_proms/aofas_score/q4_walking_surfaces|ordinal": 5,
+
+    "uclh_foot_and_ankle_proms/aofas_score/total_score": 39,
+
+    "uclh_foot_and_ankle_proms/aofas_score/comment": "Doing better still"
+
+  
+
+}

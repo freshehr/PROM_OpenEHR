@@ -54,7 +54,7 @@
                                     "localizedName": "Episode identifier",
                                     "rmType": "DV_TEXT",
                                     "nodeId": "at0001",
-                                    "min": 0,
+                                    "min": 1,
                                     "max": 1,
                                     "localizedNames": {
                                         "en": "Episode identifier"
@@ -90,7 +90,7 @@
                             "id": "start_time",
                             "name": "Start_time",
                             "rmType": "DV_DATE_TIME",
-                            "min": 0,
+                            "min": 1,
                             "max": 1,
                             "aqlPath": "/context/start_time",
                             "inputs": [
@@ -104,7 +104,7 @@
                             "id": "setting",
                             "name": "Setting",
                             "rmType": "DV_CODED_TEXT",
-                            "min": 0,
+                            "min": 1,
                             "max": 1,
                             "aqlPath": "/context/setting",
                             "inputs": [
@@ -457,39 +457,10 @@
                             ]
                         },
                         {
-                            "id": "confounding_factors",
-                            "name": "Confounding factors",
-                            "localizedName": "Confounding factors",
-                            "rmType": "DV_TEXT",
-                            "nodeId": "at0007",
-                            "min": 0,
-                            "max": -1,
-                            "dependsOn": [
-                                "q3_walking",
-                                "q4_walking_surfaces",
-                                "q2_activity_limitations_and_support_requirements",
-                                "q1_pain",
-                                "total_score",
-                                "comment"
-                            ],
-                            "localizedNames": {
-                                "en": "Confounding factors"
-                            },
-                            "localizedDescriptions": {
-                                "en": "Record any issues or factors that may impact on the overall assessment or score."
-                            },
-                            "aqlPath": "/content[openEHR-EHR-OBSERVATION.aofas.v0]/data[at0001]/events[at0002]/state[at0006]/items[at0007]/value",
-                            "inputs": [
-                                {
-                                    "type": "TEXT"
-                                }
-                            ]
-                        },
-                        {
                             "id": "time",
                             "name": "Time",
                             "rmType": "DV_DATE_TIME",
-                            "min": 0,
+                            "min": 1,
                             "max": 1,
                             "aqlPath": "/content[openEHR-EHR-OBSERVATION.aofas.v0]/data[at0001]/events[at0002]/time",
                             "inputs": [
@@ -503,7 +474,7 @@
                             "id": "language",
                             "name": "Language",
                             "rmType": "CODE_PHRASE",
-                            "min": 0,
+                            "min": 1,
                             "max": 1,
                             "aqlPath": "/content[openEHR-EHR-OBSERVATION.aofas.v0]/language",
                             "inContext": true
@@ -512,7 +483,7 @@
                             "id": "encoding",
                             "name": "Encoding",
                             "rmType": "CODE_PHRASE",
-                            "min": 0,
+                            "min": 1,
                             "max": 1,
                             "aqlPath": "/content[openEHR-EHR-OBSERVATION.aofas.v0]/encoding",
                             "inContext": true
@@ -521,7 +492,7 @@
                             "id": "subject",
                             "name": "Subject",
                             "rmType": "PARTY_PROXY",
-                            "min": 0,
+                            "min": 1,
                             "max": 1,
                             "aqlPath": "/content[openEHR-EHR-OBSERVATION.aofas.v0]/subject",
                             "inContext": true
@@ -551,7 +522,7 @@
                             "rmType": "CLUSTER",
                             "nodeId": "openEHR-EHR-CLUSTER.pain_vas.v0",
                             "min": 0,
-                            "max": -1,
+                            "max": 1,
                             "localizedNames": {
                                 "en": "Pain VAS"
                             },
@@ -583,7 +554,7 @@
                                                     "minOp": ">=",
                                                     "min": 0,
                                                     "maxOp": "<=",
-                                                    "max": 100
+                                                    "max": 10
                                                 }
                                             }
                                         }
@@ -595,7 +566,7 @@
                             "id": "time",
                             "name": "Time",
                             "rmType": "DV_DATE_TIME",
-                            "min": 0,
+                            "min": 1,
                             "max": 1,
                             "aqlPath": "/content[openEHR-EHR-OBSERVATION.story.v1,'Pain VAS']/data[at0001]/events[at0002]/time",
                             "inputs": [
@@ -609,7 +580,7 @@
                             "id": "language",
                             "name": "Language",
                             "rmType": "CODE_PHRASE",
-                            "min": 0,
+                            "min": 1,
                             "max": 1,
                             "aqlPath": "/content[openEHR-EHR-OBSERVATION.story.v1,'Pain VAS']/language",
                             "inContext": true
@@ -618,7 +589,7 @@
                             "id": "encoding",
                             "name": "Encoding",
                             "rmType": "CODE_PHRASE",
-                            "min": 0,
+                            "min": 1,
                             "max": 1,
                             "aqlPath": "/content[openEHR-EHR-OBSERVATION.story.v1,'Pain VAS']/encoding",
                             "inContext": true
@@ -627,7 +598,7 @@
                             "id": "subject",
                             "name": "Subject",
                             "rmType": "PARTY_PROXY",
-                            "min": 0,
+                            "min": 1,
                             "max": 1,
                             "aqlPath": "/content[openEHR-EHR-OBSERVATION.story.v1,'Pain VAS']/subject",
                             "inContext": true
@@ -655,13 +626,14 @@
                             ],
                             "terminology": "openehr"
                         }
-                    ]
+                    ],
+                    "inContext": true
                 },
                 {
                     "id": "language",
                     "name": "Language",
                     "rmType": "CODE_PHRASE",
-                    "min": 0,
+                    "min": 1,
                     "max": 1,
                     "aqlPath": "/language",
                     "inContext": true
@@ -670,7 +642,7 @@
                     "id": "territory",
                     "name": "Territory",
                     "rmType": "CODE_PHRASE",
-                    "min": 0,
+                    "min": 1,
                     "max": 1,
                     "aqlPath": "/territory",
                     "inContext": true
@@ -679,7 +651,7 @@
                     "id": "composer",
                     "name": "Composer",
                     "rmType": "PARTY_PROXY",
-                    "min": 0,
+                    "min": 1,
                     "max": 1,
                     "aqlPath": "/composer",
                     "inContext": true

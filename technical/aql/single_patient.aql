@@ -1,0 +1,18 @@
+select
+    a/uid/value as uid,
+    a/context/start_time/value as date,
+    b_a/data[at0001]/events[at0002]/data[at0003]/items[at0028]/value/value as Q1_ordinal,
+    b_a/data[at0001]/events[at0002]/data[at0003]/items[at0028]/value/symbol/defining_code/code_string as Q1_code,
+    b_b/items[at0001]/value/magnitude as painScaleValue,
+    b_a/data[at0001]/events[at0002]/data[at0003]/items[at0008]/value/magnitude as totalScore,
+    b_a/data[at0001]/events[at0002]/data[at0003]/items[at0027]/value/value as comment,
+    b_a/data[at0001]/events[at0002]/data[at0003]/items[at0047]/value/value as gradeText,
+    b_a/data[at0001]/events[at0002]/data[at0003]/items[at0047]/value/defining_code/code_string as gradeCode
+from EHR e
+contains COMPOSITION a[openEHR-EHR-COMPOSITION.report.v1]
+contains (
+    OBSERVATION b_a[openEHR-EHR-OBSERVATION.aofas.v0] or
+    CLUSTER b_b[openEHR-EHR-CLUSTER.pain_vas.v0])
+where
+    a/name/value='UCLH Foot and ankle PROMs' and
+    e/ehr_id/value='6ad6c847-7c37-485d-8dbb-7b56d1c23918'
