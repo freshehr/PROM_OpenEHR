@@ -24,7 +24,7 @@
       "Sign off" : "",
       "Speciality" : "",
       "User roles" : "",
-      "MD5-CAM-1.0.1" : "0d793f3de140c44786c16b61f52ecd6e",
+      "MD5-CAM-1.0.1" : "90dbffd5fa9ad3282728ef63868367b4",
       "PARENT:MD5-CAM-1.0.1" : "1DA7D8EDC23CF1B673C05E6E8FE28EB1"
     },
     "details" : {
@@ -120,27 +120,6 @@
     "rmTypeName" : "COMPOSITION",
     "nodeId" : "at0000.1",
     "attributes" : [ {
-      "@type" : "C_ATTRIBUTE",
-      "rmAttributeName" : "category",
-      "children" : [ {
-        "@type" : "C_COMPLEX_OBJECT",
-        "rmTypeName" : "DV_CODED_TEXT",
-        "attributes" : [ {
-          "@type" : "C_ATTRIBUTE",
-          "rmAttributeName" : "defining_code",
-          "children" : [ {
-            "@type" : "C_TERMINOLOGY_CODE",
-            "rmTypeName" : "CODE_PHRASE",
-            "occurrences" : "1..1",
-            "terminologyId" : {
-              "value" : "openehr"
-            },
-            "constraint" : [ "433" ]
-          } ]
-        } ],
-        "attributeTuples" : [ ]
-      } ]
-    }, {
       "@type" : "C_ATTRIBUTE",
       "rmAttributeName" : "context",
       "children" : [ {
@@ -1193,7 +1172,7 @@
                     }, {
                       "@type" : "C_ARCHETYPE_ROOT",
                       "rmTypeName" : "CLUSTER",
-                      "occurrences" : "0..*",
+                      "occurrences" : "0..1",
                       "nodeId" : "at0006.1",
                       "attributes" : [ ],
                       "attributeTuples" : [ ],
