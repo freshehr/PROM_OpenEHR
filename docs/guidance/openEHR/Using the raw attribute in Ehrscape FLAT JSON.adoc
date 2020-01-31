@@ -1,0 +1,1027 @@
+= Using the Ehrscape FLAT JSON `|raw` attribute to access 'hidden' Element attributes
+Ian McNicoll <ian@inidus.com>
+v1.0.0, 5-Nov-2017
+
+// Add support for Github icons
+
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+
+== Overview
+Whilst the Ehrscape `FLAT\STRUCTURED JSON` formats allow deeply nested openEHR datatypes to be simply populated, not all of the low-level attributes of every openEHR datatype are exposed in `FLAT/STRUCTURED JSON`.
+
+As an example, the http://www.openehr.org/releases/trunk/UML/diagrams/diagram_Diagrams___18_1_83e026d_1433773265063_214646_8610.png[openEHR DV_QUANTITY datatype]
+
+
+has the following attributes..
+
+Attributes supported by FLAT/STRUCTURED JSON::
+- `normal_range`
+- `magnitude`
+- `units`
+
+Attributes NOT Supported by FLAT/STRUCTURED JSON::
+- `other_reference_ranges`
+- `normal_status`
+- `magnitude_status`
+
+The Ehrscape `RAW JSON` format does support all of these attributes.
+Fortunately the `FLAT/STRUCTURED JSON` formats have a `|raw` attribute which allows a stringified form of RAW JSON to be commited alongside normal FLAT JSON.
+
+As a simple example, instead of sending the following `FLAT JSON` ...
+
+[source,json]
+----
+"laboratory_result_report/laboratory_test:0/laboratory_test_panel:0/laboratory_result:0/result_value/value2|magnitude": "83",
+"laboratory_result_report/laboratory_test:0/laboratory_test_panel:0/laboratory_result:0/result_value/value2|unit": "g",
+----
+
+it is possible to send the RAW JSON equivalent
+
+[source,json]
+----
+{
+   "@class": "DV_QUANTITY",
+   "magnitude": 7.4,
+   "units": "mmol/l"
+}
+----
+
+but this has first to be converted to a flattened string,
+removing any newlines/whitespace, escaping any json reserved characters.
+
+see http://peter-rehm.de/2014/10/07/Escape-special-characters-within-JSON.stringify/[Escape special characters within JSON.stringify]
+
+[source,json]
+----
+"{\"@class\": "\DV_QUANTITY\",\"magnitude": 7.4,\"units\": \"mmol/l\"}"
+----
+
+The stringified JSON is then added to the `FLAT/STRUCTURED JSON` via a `|raw` attribute...
+
+[source,json]
+----
+{
+ "laboratory_result_report/laboratory_test:0/laboratory_test_panel:0/laboratory_result:0/result_value/value2|raw": "{\"@class\":\"DV_QUANTITY\",\"normal_range\":{\"@class\":\"DV_INTERVAL\",\"lower\":{\"@class\":\"DV_QUANTITY\",\"magnitude\":2.5,\"units\":\"mmol/l\"},\"upper\":{\"@class\":\"DV_QUANTITY\",\"magnitude\":6.6,\"units\":\"mmol/l\"},\"lower_unbounded\":false,\"upper_unbounded\":false},\"other_reference_ranges\":[{\"@class\":\"REFERENCE_RANGE\",\"meaning\":{\"@class\":\"DV_TEXT\",\"value\":\"Age-sex appropriate range\"},\"range\":{\"@class\":\"DV_INTERVAL\",\"lower\":{\"@class\":\"DV_QUANTITY\",\"magnitude\":2.5,\"units\":\"mmol/l\"},\"upper\":{\"@class\":\"DV_QUANTITY\",\"magnitude\":6.6,\"units\":\"mmol/l\"},\"lower_unbounded\":false,\"upper_unbounded\":false}}],\"normal_status\":{\"@class\":\"CODE_PHRASE\",\"terminology_id\":{\"@class\":\"TERMINOLOGY_ID\",\"value\":\"openehr\"},\"code_string\":\"LL\"},\"magnitude_status\":\">=\",\"magnitude\":7.4,\"units\":\"mmol/l\"}"
+}
+----
+WARNING: Where multiple datatypes are allowed for the Element, the `|raw` attribute must be added to the openEHR "sub-type" must be selected first.
+e.g. `.../value2|raw` or `.../quantity_value|raw`.
+
+This example is trivial and using `|raw` is not merited - it makes more sense where attributes are not supported by `FLAT/STRUCTURED JSON`.
+
+The following example demonstrates a fully-populated `DV_QUANTITY` element, including the `magnitude_status`, `normal_status` and `other_reference_range` attributes which are not supported by `FLAT/STRUCTURED JSON`.
+
+== Fully populated RAW JSON DV_QUANTITY snippet
+[source,json]
+----
+{
+    "@class": "DV_QUANTITY",
+    "normal_range": {
+        "@class": "DV_INTERVAL",
+        "lower": {
+            "@class": "DV_QUANTITY",
+            "magnitude": 2.5,
+            "units": "mmol/l"
+        },
+        "upper": {
+            "@class": "DV_QUANTITY",
+            "magnitude": 6.6,
+            "units": "mmol/l"
+        },
+        "lower_unbounded": false,
+        "upper_unbounded": false
+    },
+    "other_reference_ranges": [
+        {
+            "@class": "REFERENCE_RANGE",
+            "meaning": {
+                "@class": "DV_TEXT",
+                "value": "Age-sex appropriate range"
+            },
+            "range": {
+                "@class": "DV_INTERVAL",
+                "lower": {
+                    "@class": "DV_QUANTITY",
+                    "magnitude": 2.5,
+                    "units": "mmol/l"
+                },
+                "upper": {
+                    "@class": "DV_QUANTITY",
+                    "magnitude": 6.6,
+                    "units": "mmol/l"
+                },
+                "lower_unbounded": false,
+                "upper_unbounded": false
+            }
+        }
+    ],
+    "normal_status": {
+        "@class": "CODE_PHRASE",
+        "terminology_id": {
+            "@class": "TERMINOLOGY_ID",
+            "value": "openehr"
+        },
+        "code_string": "LL"
+    },
+    "magnitude_status": ">=",
+    "magnitude": 7.4,
+    "units": "mmol/l"
+}
+
+----
+TIP: This snippet may be helpful to use as a template in code, to populate the structure correctly before stringifying.
+
+[source,json]
+----
+{  "laboratory_result_report/laboratory_test:0/laboratory_test_panel:0/laboratory_result:1/result_value/value2|raw": "{{Flattened-escaped_RAW_value}}"
+}
+----
+
+- Remove any newlines, tabs or other whitespace
+
+[source,ansii]
+----
+"{"@class":"DV_QUANTITY","normal_range":{"@class":"DV_INTERVAL","lower":{"@class":"DV_QUANTITY","magnitude":2.5,"units":"mmol/l"},"upper":{"@class":"DV_QUANTITY","magnitude":6.6,"units":"mmol/l"},"lower_unbounded":false,"upper_unbounded":false},"other_reference_ranges":[{"@class":"REFERENCE_RANGE","meaning":{"@class":"DV_TEXT","value":"Age-sex appropriate range"},"range":{"@class":"DV_INTERVAL","lower":{"@class":"DV_QUANTITY","magnitude":2.5,"units":"mmol/l"},"upper":{"@class":"DV_QUANTITY","magnitude":6.6,"units":"mmol/l"},"lower_unbounded":false,"upper_unbounded":false}}],"normal_status":{"@class":"CODE_PHRASE","terminology_id":{"@class":"TERMINOLOGY_ID","value":"openehr"},"code_string":"LL"},"magnitude_status":">=","magnitude":7.4,"units":"mmol/l"}"
+----
+
+- Escape any double-quote characters or other reserved JSON characters.
+
+[source, javascript]
+----
+"{\"@class\":\"DV_QUANTITY\",\"normal_range\":{\"@class\":\"DV_INTERVAL\",\"lower\":{\"@class\":\"DV_QUANTITY\",\"magnitude\":2.5,\"units\":\"mmol/l\"},\"upper\":{\"@class\":\"DV_QUANTITY\",\"magnitude\":6.6,\"units\":\"mmol/l\"},\"lower_unbounded\":false,\"upper_unbounded\":false},\"other_reference_ranges\":[{\"@class\":\"REFERENCE_RANGE\",\"meaning\":{\"@class\":\"DV_TEXT\",\"value\":\"Age-sex appropriate range\"},\"range\":{\"@class\":\"DV_INTERVAL\",\"lower\":{\"@class\":\"DV_QUANTITY\",\"magnitude\":2.5,\"units\":\"mmol/l\"},\"upper\":{\"@class\":\"DV_QUANTITY\",\"magnitude\":6.6,\"units\":\"mmol/l\"},\"lower_unbounded\":false,\"upper_unbounded\":false}}],\"normal_status\":{\"@class\":\"CODE_PHRASE\",\"terminology_id\":{\"@class\":\"TERMINOLOGY_ID\",\"value\":\"openehr\"},\"code_string\":\"LL\"},\"magnitude_status\":\">=\",\"magnitude\":7.4,\"units\":\"mmol/l\"}"
+----
+
+- Add the escaped.flattened JSON string to the value2|raw attribute of the appropriate element.
+
+[source,json]
+----
+{
+  "laboratory_result_report/laboratory_test:0/laboratory_test_panel:0/laboratory_result:1/result_value/value2|raw": "{\"@class\":\"DV_QUANTITY\",\"normal_range\":{\"@class\":\"DV_INTERVAL\",\"lower\":{\"@class\":\"DV_QUANTITY\",\"magnitude\":2.5,\"units\":\"mmol/l\"},\"upper\":{\"@class\":\"DV_QUANTITY\",\"magnitude\":6.6,\"units\":\"mmol/l\"},\"lower_unbounded\":false,\"upper_unbounded\":false},\"other_reference_ranges\":[{\"@class\":\"REFERENCE_RANGE\",\"meaning\":{\"@class\":\"DV_TEXT\",\"value\":\"Age-sex appropriate range\"},\"range\":{\"@class\":\"DV_INTERVAL\",\"lower\":{\"@class\":\"DV_QUANTITY\",\"magnitude\":2.5,\"units\":\"mmol/l\"},\"upper\":{\"@class\":\"DV_QUANTITY\",\"magnitude\":6.6,\"units\":\"mmol/l\"},\"lower_unbounded\":false,\"upper_unbounded\":false}}],\"normal_status\":{\"@class\":\"CODE_PHRASE\",\"terminology_id\":{\"@class\":\"TERMINOLOGY_ID\",\"value\":\"openehr\"},\"code_string\":\"LL\"},\"magnitude_status\":\">=\",\"magnitude\":7.4,\"units\":\"mmol/l\"}"
+}
+----
+
+
+== Full FLAT JSON Composition example
+
+An example of a full `INPUT FLAT JSON` composition containing an element using the  `|raw` attribute.
+[source,json]
+----
+{
+  "ctx/language": "en",
+  "ctx/territory": "GB",
+  "ctx/composer_name": "Silvia Blake",
+  "ctx/time": "2017-10-26T18:49:55.770+01:00",
+  "ctx/id_namespace": "HOSPITAL-NS",
+  "ctx/id_scheme": "HOSPITAL-NS",
+  "ctx/participation_name": "Dr. Marcus Johnson",
+  "ctx/participation_function": "requester",
+  "ctx/participation_mode": "face-to-face communication",
+  "ctx/participation_id": "199",
+  "ctx/participation_name:1": "Lara Markham",
+  "ctx/participation_function:1": "performer",
+  "ctx/participation_id:1": "198",
+  "ctx/health_care_facility|name": "Hospital",
+  "ctx/health_care_facility|id": "9091",
+  "laboratory_result_report/context/report_id": "Report ID 52",
+  "laboratory_result_report/laboratory_test:0/requested_test": "Requested Test 83",
+  "laboratory_result_report/laboratory_test:0/specimen:0/specimen_type": "Specimen type 23",
+  "laboratory_result_report/laboratory_test:0/specimen:0/datetime_collected": "2017-10-26T18:49:55.77+01:00",
+  "laboratory_result_report/laboratory_test:0/specimen:0/collection_method": "Collection method 95",
+  "laboratory_result_report/laboratory_test:0/specimen:0/processing/datetime_received": "2017-10-26T18:49:55.77+01:00",
+  "laboratory_result_report/laboratory_test:0/specimen:0/processing/laboratory_specimen_identifier": "02aac0e8-30a3-4d04-a046-1189e6aaffb5",
+  "laboratory_result_report/laboratory_test:0/specimen:0/processing/laboratory_specimen_identifier|issuer": "Issuer",
+  "laboratory_result_report/laboratory_test:0/specimen:0/processing/laboratory_specimen_identifier|assigner": "Assigner",
+  "laboratory_result_report/laboratory_test:0/specimen:0/processing/laboratory_specimen_identifier|type": "Prescription",
+  "laboratory_result_report/laboratory_test:0/test_status|code": "at0107",
+  "laboratory_result_report/laboratory_test:0/test_status_timestamp": "2017-10-26T18:49:55.77+01:00",
+  "laboratory_result_report/laboratory_test:0/clinical_information_provided": "Clinical information provided 58",
+  "laboratory_result_report/laboratory_test:0/laboratory_test_panel:0/laboratory_result:0/result_value/value2|magnitude": "83",
+  "laboratory_result_report/laboratory_test:0/laboratory_test_panel:0/laboratory_result:0/result_value/value2|unit": "g",
+  "laboratory_result_report/laboratory_test:0/laboratory_test_panel:0/laboratory_result:0/comment": "Comment 33",
+  "laboratory_result_report/laboratory_test:0/laboratory_test_panel:0/laboratory_result:0/reference_range_guidance": "Reference range guidance 5",
+   "laboratory_result_report/laboratory_test:0/laboratory_test_panel:0/laboratory_result:1/result_value/value2|raw": "{\"@class\":\"DV_QUANTITY\",\"normal_range\":{\"@class\":\"DV_INTERVAL\",\"lower\":{\"@class\":\"DV_QUANTITY\",\"magnitude\":2.5,\"units\":\"mmol/l\"},\"upper\":{\"@class\":\"DV_QUANTITY\",\"magnitude\":6.6,\"units\":\"mmol/l\"},\"lower_unbounded\":false,\"upper_unbounded\":false},\"other_reference_ranges\":[{\"@class\":\"REFERENCE_RANGE\",\"meaning\":{\"@class\":\"DV_TEXT\",\"value\":\"Age-sex appropriate range\"},\"range\":{\"@class\":\"DV_INTERVAL\",\"lower\":{\"@class\":\"DV_QUANTITY\",\"magnitude\":2.5,\"units\":\"mmol/l\"},\"upper\":{\"@class\":\"DV_QUANTITY\",\"magnitude\":6.6,\"units\":\"mmol/l\"},\"lower_unbounded\":false,\"upper_unbounded\":false}}],\"normal_status\":{\"@class\":\"CODE_PHRASE\",\"terminology_id\":{\"@class\":\"TERMINOLOGY_ID\",\"value\":\"openehr\"},\"code_string\":\"LL\"},\"magnitude_status\":\">=\",\"magnitude\":7.4,\"units\":\"mmol/l\"}",
+  "laboratory_result_report/laboratory_test:0/laboratory_test_panel:0/laboratory_result:0/result_status|code": "at0008",
+  "laboratory_result_report/laboratory_test:0/conclusion": "Conclusion 24",
+  "laboratory_result_report/laboratory_test:0/responsible_laboratory/name_of_organisation": "Name of Organisation 13",
+  "laboratory_result_report/laboratory_test:0/test_request_details/placer_order_number": "6b9ccde5-573f-4f03-8bff-21e9122e3695",
+  "laboratory_result_report/laboratory_test:0/test_request_details/placer_order_number|issuer": "Issuer",
+  "laboratory_result_report/laboratory_test:0/test_request_details/placer_order_number|assigner": "Assigner",
+  "laboratory_result_report/laboratory_test:0/test_request_details/placer_order_number|type": "Prescription",
+  "laboratory_result_report/laboratory_test:0/test_request_details/filler_order_number": "db267a4e-205a-4489-b024-8e07469ca226",
+  "laboratory_result_report/laboratory_test:0/test_request_details/filler_order_number|issuer": "Issuer",
+  "laboratory_result_report/laboratory_test:0/test_request_details/filler_order_number|assigner": "Assigner",
+  "laboratory_result_report/laboratory_test:0/test_request_details/filler_order_number|type": "Prescription",
+  "laboratory_result_report/laboratory_test:0/test_request_details/requester/ordering_provider/ordering_provider/given_name": "Given name 86",
+  "laboratory_result_report/laboratory_test:0/test_request_details/requester/ordering_provider/ordering_provider/family_name": "Family name 17",
+  "laboratory_result_report/laboratory_test:0/test_request_details/requester/professional_identifier": "050a7d61-ab0f-4286-a65f-25e2114a9609",
+  "laboratory_result_report/laboratory_test:0/test_request_details/requester/professional_identifier|issuer": "Issuer",
+  "laboratory_result_report/laboratory_test:0/test_request_details/requester/professional_identifier|assigner": "Assigner",
+  "laboratory_result_report/laboratory_test:0/test_request_details/requester/professional_identifier|type": "Prescription",
+  "laboratory_result_report/patient_comment/comment": "Comment 21",
+  "laboratory_result_report/category|code": "433",
+  "laboratory_result_report/category|value": "event"
+}
+----
+
+=== Example of RAW JSON composition
+For reference, this is an example of a `RAW JSON` openEHR laboratory result composition shows typical content for a laboratory result.
+
+[source,json]
+----
+{
+       "@class": "COMPOSITION",
+       "name": {
+           "@class": "DV_TEXT",
+           "value": "Laboratory Result Report"
+       },
+       "uid": {
+           "@class": "OBJECT_VERSION_ID",
+           "value": "fafb0d70-7269-4895-99bd-55fb41b5a638::ntgmc.oprn1.ehrscape.com::1"
+       },
+       "archetype_details": {
+           "@class": "ARCHETYPED",
+           "archetype_id": {
+               "@class": "ARCHETYPE_ID",
+               "value": "openEHR-EHR-COMPOSITION.report-result.v1"
+           },
+           "template_id": {
+               "@class": "TEMPLATE_ID",
+               "value": "GEL - Generic Lab Report import.v0"
+           },
+           "rm_version": "1.0.1"
+       },
+       "archetype_node_id": "openEHR-EHR-COMPOSITION.report-result.v1",
+       "language": {
+           "@class": "CODE_PHRASE",
+           "terminology_id": {
+               "@class": "TERMINOLOGY_ID",
+               "value": "ISO_639-1"
+           },
+           "code_string": "en"
+       },
+       "territory": {
+           "@class": "CODE_PHRASE",
+           "terminology_id": {
+               "@class": "TERMINOLOGY_ID",
+               "value": "ISO_3166-1"
+           },
+           "code_string": "GB"
+       },
+       "category": {
+           "@class": "DV_CODED_TEXT",
+           "value": "event",
+           "defining_code": {
+               "@class": "CODE_PHRASE",
+               "terminology_id": {
+                   "@class": "TERMINOLOGY_ID",
+                   "value": "openehr"
+               },
+               "code_string": "433"
+           }
+       },
+       "composer": {
+           "@class": "PARTY_IDENTIFIED",
+           "name": "Silvia Blake"
+       },
+       "context": {
+           "@class": "EVENT_CONTEXT",
+           "start_time": {
+               "@class": "DV_DATE_TIME",
+               "value": "2017-10-26T18:49:55.77+01:00"
+           },
+           "setting": {
+               "@class": "DV_CODED_TEXT",
+               "value": "other care",
+               "defining_code": {
+                   "@class": "CODE_PHRASE",
+                   "terminology_id": {
+                       "@class": "TERMINOLOGY_ID",
+                       "value": "openehr"
+                   },
+                   "code_string": "238"
+               }
+           },
+           "other_context": {
+               "@class": "ITEM_TREE",
+               "name": {
+                   "@class": "DV_TEXT",
+                   "value": "Tree"
+               },
+               "archetype_node_id": "at0001",
+               "items": [
+                   {
+                       "@class": "ELEMENT",
+                       "name": {
+                           "@class": "DV_TEXT",
+                           "value": "Report ID"
+                       },
+                       "archetype_node_id": "at0002",
+                       "value": {
+                           "@class": "DV_TEXT",
+                           "value": "Report ID 52"
+                       }
+                   }
+               ]
+           },
+           "health_care_facility": {
+               "@class": "PARTY_IDENTIFIED",
+               "external_ref": {
+                   "@class": "PARTY_REF",
+                   "id": {
+                       "@class": "GENERIC_ID",
+                       "value": "9091",
+                       "scheme": "HOSPITAL-NS"
+                   },
+                   "namespace": "HOSPITAL-NS",
+                   "type": "PARTY"
+               },
+               "name": "Hospital"
+           }
+       },
+       "content": [
+           {
+               "@class": "OBSERVATION",
+               "name": {
+                   "@class": "DV_TEXT",
+                   "value": "Laboratory test"
+               },
+               "archetype_details": {
+                   "@class": "ARCHETYPED",
+                   "archetype_id": {
+                       "@class": "ARCHETYPE_ID",
+                       "value": "openEHR-EHR-OBSERVATION.laboratory_test.v0"
+                   },
+                   "rm_version": "1.0.1"
+               },
+               "archetype_node_id": "openEHR-EHR-OBSERVATION.laboratory_test.v0",
+               "language": {
+                   "@class": "CODE_PHRASE",
+                   "terminology_id": {
+                       "@class": "TERMINOLOGY_ID",
+                       "value": "ISO_639-1"
+                   },
+                   "code_string": "en"
+               },
+               "encoding": {
+                   "@class": "CODE_PHRASE",
+                   "terminology_id": {
+                       "@class": "TERMINOLOGY_ID",
+                       "value": "IANA_character-sets"
+                   },
+                   "code_string": "UTF-8"
+               },
+               "subject": {
+                   "@class": "PARTY_SELF"
+               },
+               "other_participations": [
+                   {
+                       "@class": "PARTICIPATION",
+                       "function": {
+                           "@class": "DV_TEXT",
+                           "value": "requester"
+                       },
+                       "performer": {
+                           "@class": "PARTY_IDENTIFIED",
+                           "external_ref": {
+                               "@class": "PARTY_REF",
+                               "id": {
+                                   "@class": "GENERIC_ID",
+                                   "value": "199",
+                                   "scheme": "HOSPITAL-NS"
+                               },
+                               "namespace": "HOSPITAL-NS",
+                               "type": "ANY"
+                           },
+                           "name": "Dr. Marcus Johnson"
+                       },
+                       "mode": {
+                           "@class": "DV_CODED_TEXT",
+                           "value": "face-to-face communication",
+                           "defining_code": {
+                               "@class": "CODE_PHRASE",
+                               "terminology_id": {
+                                   "@class": "TERMINOLOGY_ID",
+                                   "value": "openehr"
+                               },
+                               "code_string": "216"
+                           }
+                       }
+                   },
+                   {
+                       "@class": "PARTICIPATION",
+                       "function": {
+                           "@class": "DV_TEXT",
+                           "value": "performer"
+                       },
+                       "performer": {
+                           "@class": "PARTY_IDENTIFIED",
+                           "external_ref": {
+                               "@class": "PARTY_REF",
+                               "id": {
+                                   "@class": "GENERIC_ID",
+                                   "value": "198",
+                                   "scheme": "HOSPITAL-NS"
+                               },
+                               "namespace": "HOSPITAL-NS",
+                               "type": "ANY"
+                           },
+                           "name": "Lara Markham"
+                       },
+                       "mode": {
+                           "@class": "DV_CODED_TEXT",
+                           "value": "not specified",
+                           "defining_code": {
+                               "@class": "CODE_PHRASE",
+                               "terminology_id": {
+                                   "@class": "TERMINOLOGY_ID",
+                                   "value": "openehr"
+                               },
+                               "code_string": "193"
+                           }
+                       }
+                   }
+               ],
+               "protocol": {
+                   "@class": "ITEM_TREE",
+                   "name": {
+                       "@class": "DV_TEXT",
+                       "value": "Tree"
+                   },
+                   "archetype_node_id": "at0004",
+                   "items": [
+                       {
+                           "@class": "CLUSTER",
+                           "name": {
+                               "@class": "DV_TEXT",
+                               "value": "Responsible laboratory"
+                           },
+                           "archetype_details": {
+                               "@class": "ARCHETYPED",
+                               "archetype_id": {
+                                   "@class": "ARCHETYPE_ID",
+                                   "value": "openEHR-EHR-CLUSTER.organisation.v1"
+                               },
+                               "rm_version": "1.0.1"
+                           },
+                           "archetype_node_id": "openEHR-EHR-CLUSTER.organisation.v1",
+                           "items": [
+                               {
+                                   "@class": "ELEMENT",
+                                   "name": {
+                                       "@class": "DV_TEXT",
+                                       "value": "Name of Organisation"
+                                   },
+                                   "archetype_node_id": "at0001",
+                                   "value": {
+                                       "@class": "DV_TEXT",
+                                       "value": "Name of Organisation 13"
+                                   }
+                               }
+                           ]
+                       },
+                       {
+                           "@class": "CLUSTER",
+                           "name": {
+                               "@class": "DV_TEXT",
+                               "value": "Test request details"
+                           },
+                           "archetype_node_id": "at0094",
+                           "items": [
+                               {
+                                   "@class": "ELEMENT",
+                                   "name": {
+                                       "@class": "DV_TEXT",
+                                       "value": "Placer order number"
+                                   },
+                                   "archetype_node_id": "at0062",
+                                   "value": {
+                                       "@class": "DV_IDENTIFIER",
+                                       "issuer": "Issuer",
+                                       "assigner": "Assigner",
+                                       "id": "6b9ccde5-573f-4f03-8bff-21e9122e3695",
+                                       "type": "Prescription"
+                                   }
+                               },
+                               {
+                                   "@class": "ELEMENT",
+                                   "name": {
+                                       "@class": "DV_TEXT",
+                                       "value": "Filler order number"
+                                   },
+                                   "archetype_node_id": "at0063",
+                                   "value": {
+                                       "@class": "DV_IDENTIFIER",
+                                       "issuer": "Issuer",
+                                       "assigner": "Assigner",
+                                       "id": "db267a4e-205a-4489-b024-8e07469ca226",
+                                       "type": "Prescription"
+                                   }
+                               },
+                               {
+                                   "@class": "CLUSTER",
+                                   "name": {
+                                       "@class": "DV_TEXT",
+                                       "value": "Requester"
+                                   },
+                                   "archetype_details": {
+                                       "@class": "ARCHETYPED",
+                                       "archetype_id": {
+                                           "@class": "ARCHETYPE_ID",
+                                           "value": "openEHR-EHR-CLUSTER.individual_professional.v1"
+                                       },
+                                       "rm_version": "1.0.1"
+                                   },
+                                   "archetype_node_id": "openEHR-EHR-CLUSTER.individual_professional.v1",
+                                   "items": [
+                                       {
+                                           "@class": "CLUSTER",
+                                           "name": {
+                                               "@class": "DV_TEXT",
+                                               "value": "Ordering provider"
+                                           },
+                                           "archetype_details": {
+                                               "@class": "ARCHETYPED",
+                                               "archetype_id": {
+                                                   "@class": "ARCHETYPE_ID",
+                                                   "value": "openEHR-EHR-CLUSTER.person_name.v1"
+                                               },
+                                               "rm_version": "1.0.1"
+                                           },
+                                           "archetype_node_id": "openEHR-EHR-CLUSTER.person_name.v1",
+                                           "items": [
+                                               {
+                                                   "@class": "CLUSTER",
+                                                   "name": {
+                                                       "@class": "DV_TEXT",
+                                                       "value": "Ordering provider"
+                                                   },
+                                                   "archetype_node_id": "at0002",
+                                                   "items": [
+                                                       {
+                                                           "@class": "ELEMENT",
+                                                           "name": {
+                                                               "@class": "DV_TEXT",
+                                                               "value": "Given name"
+                                                           },
+                                                           "archetype_node_id": "at0003",
+                                                           "value": {
+                                                               "@class": "DV_TEXT",
+                                                               "value": "Given name 86"
+                                                           }
+                                                       },
+                                                       {
+                                                           "@class": "ELEMENT",
+                                                           "name": {
+                                                               "@class": "DV_TEXT",
+                                                               "value": "Family name"
+                                                           },
+                                                           "archetype_node_id": "at0005",
+                                                           "value": {
+                                                               "@class": "DV_TEXT",
+                                                               "value": "Family name 17"
+                                                           }
+                                                       }
+                                                   ]
+                                               }
+                                           ]
+                                       },
+                                       {
+                                           "@class": "ELEMENT",
+                                           "name": {
+                                               "@class": "DV_TEXT",
+                                               "value": "Professional Identifier"
+                                           },
+                                           "archetype_node_id": "at0011",
+                                           "value": {
+                                               "@class": "DV_IDENTIFIER",
+                                               "issuer": "Issuer",
+                                               "assigner": "Assigner",
+                                               "id": "050a7d61-ab0f-4286-a65f-25e2114a9609",
+                                               "type": "Prescription"
+                                           }
+                                       }
+                                   ]
+                               }
+                           ]
+                       }
+                   ]
+               },
+               "data": {
+                   "@class": "HISTORY",
+                   "name": {
+                       "@class": "DV_TEXT",
+                       "value": "Event Series"
+                   },
+                   "archetype_node_id": "at0001",
+                   "origin": {
+                       "@class": "DV_DATE_TIME",
+                       "value": "2017-10-26T18:49:55.77+01:00"
+                   },
+                   "events": [
+                       {
+                           "@class": "POINT_EVENT",
+                           "name": {
+                               "@class": "DV_TEXT",
+                               "value": "Any event"
+                           },
+                           "archetype_node_id": "at0002",
+                           "time": {
+                               "@class": "DV_DATE_TIME",
+                               "value": "2017-10-26T18:49:55.77+01:00"
+                           },
+                           "data": {
+                               "@class": "ITEM_TREE",
+                               "name": {
+                                   "@class": "DV_TEXT",
+                                   "value": "Tree"
+                               },
+                               "archetype_node_id": "at0003",
+                               "items": [
+                                   {
+                                       "@class": "ELEMENT",
+                                       "name": {
+                                           "@class": "DV_TEXT",
+                                           "value": "Requested Test"
+                                       },
+                                       "archetype_node_id": "at0005",
+                                       "value": {
+                                           "@class": "DV_TEXT",
+                                           "value": "Requested Test 83"
+                                       }
+                                   },
+                                   {
+                                       "@class": "CLUSTER",
+                                       "name": {
+                                           "@class": "DV_TEXT",
+                                           "value": "Specimen"
+                                       },
+                                       "archetype_details": {
+                                           "@class": "ARCHETYPED",
+                                           "archetype_id": {
+                                               "@class": "ARCHETYPE_ID",
+                                               "value": "openEHR-EHR-CLUSTER.specimen.v0"
+                                           },
+                                           "rm_version": "1.0.1"
+                                       },
+                                       "archetype_node_id": "openEHR-EHR-CLUSTER.specimen.v0",
+                                       "items": [
+                                           {
+                                               "@class": "ELEMENT",
+                                               "name": {
+                                                   "@class": "DV_TEXT",
+                                                   "value": "Specimen type"
+                                               },
+                                               "archetype_node_id": "at0029",
+                                               "value": {
+                                                   "@class": "DV_TEXT",
+                                                   "value": "Specimen type 23"
+                                               }
+                                           },
+                                           {
+                                               "@class": "ELEMENT",
+                                               "name": {
+                                                   "@class": "DV_TEXT",
+                                                   "value": "Datetime collected"
+                                               },
+                                               "archetype_node_id": "at0015",
+                                               "value": {
+                                                   "@class": "DV_DATE_TIME",
+                                                   "value": "2017-10-26T18:49:55.77+01:00"
+                                               }
+                                           },
+                                           {
+                                               "@class": "ELEMENT",
+                                               "name": {
+                                                   "@class": "DV_TEXT",
+                                                   "value": "Collection method"
+                                               },
+                                               "archetype_node_id": "at0007",
+                                               "value": {
+                                                   "@class": "DV_TEXT",
+                                                   "value": "Collection method 95"
+                                               }
+                                           },
+                                           {
+                                               "@class": "CLUSTER",
+                                               "name": {
+                                                   "@class": "DV_TEXT",
+                                                   "value": "Processing"
+                                               },
+                                               "archetype_node_id": "at0046",
+                                               "items": [
+                                                   {
+                                                       "@class": "ELEMENT",
+                                                       "name": {
+                                                           "@class": "DV_TEXT",
+                                                           "value": "Datetime received"
+                                                       },
+                                                       "archetype_node_id": "at0034",
+                                                       "value": {
+                                                           "@class": "DV_DATE_TIME",
+                                                           "value": "2017-10-26T18:49:55.77+01:00"
+                                                       }
+                                                   },
+                                                   {
+                                                       "@class": "ELEMENT",
+                                                       "name": {
+                                                           "@class": "DV_TEXT",
+                                                           "value": "Laboratory specimen identifier"
+                                                       },
+                                                       "archetype_node_id": "at0001",
+                                                       "value": {
+                                                           "@class": "DV_IDENTIFIER",
+                                                           "issuer": "Issuer",
+                                                           "assigner": "Assigner",
+                                                           "id": "02aac0e8-30a3-4d04-a046-1189e6aaffb5",
+                                                           "type": "Prescription"
+                                                       }
+                                                   }
+                                               ]
+                                           }
+                                       ]
+                                   },
+                                   {
+                                       "@class": "ELEMENT",
+                                       "name": {
+                                           "@class": "DV_TEXT",
+                                           "value": "Test status"
+                                       },
+                                       "archetype_node_id": "at0073",
+                                       "value": {
+                                           "@class": "DV_CODED_TEXT",
+                                           "value": "Registered",
+                                           "defining_code": {
+                                               "@class": "CODE_PHRASE",
+                                               "terminology_id": {
+                                                   "@class": "TERMINOLOGY_ID",
+                                                   "value": "local"
+                                               },
+                                               "code_string": "at0107"
+                                           }
+                                       }
+                                   },
+                                   {
+                                       "@class": "ELEMENT",
+                                       "name": {
+                                           "@class": "DV_TEXT",
+                                           "value": "Test status timestamp"
+                                       },
+                                       "archetype_node_id": "at0075",
+                                       "value": {
+                                           "@class": "DV_DATE_TIME",
+                                           "value": "2017-10-26T18:49:55.77+01:00"
+                                       }
+                                   },
+                                   {
+                                       "@class": "ELEMENT",
+                                       "name": {
+                                           "@class": "DV_TEXT",
+                                           "value": "Clinical information provided"
+                                       },
+                                       "archetype_node_id": "at0100",
+                                       "value": {
+                                           "@class": "DV_TEXT",
+                                           "value": "Clinical information provided 58"
+                                       }
+                                   },
+                                   {
+                                       "@class": "CLUSTER",
+                                       "name": {
+                                           "@class": "DV_TEXT",
+                                           "value": "Laboratory test panel"
+                                       },
+                                       "archetype_details": {
+                                           "@class": "ARCHETYPED",
+                                           "archetype_id": {
+                                               "@class": "ARCHETYPE_ID",
+                                               "value": "openEHR-EHR-CLUSTER.laboratory_test_panel.v0"
+                                           },
+                                           "rm_version": "1.0.1"
+                                       },
+                                       "archetype_node_id": "openEHR-EHR-CLUSTER.laboratory_test_panel.v0",
+                                       "items": [
+                                           {
+                                               "@class": "CLUSTER",
+                                               "name": {
+                                                   "@class": "DV_TEXT",
+                                                   "value": "Laboratory result"
+                                               },
+                                               "archetype_node_id": "at0002",
+                                               "items": [
+                                                   {
+                                                       "@class": "ELEMENT",
+                                                       "name": {
+                                                           "@class": "DV_TEXT",
+                                                           "value": "Result value"
+                                                       },
+                                                       "archetype_node_id": "at0001",
+                                                       "value": {
+                                                           "@class": "DV_QUANTITY",
+                                                           "normal_range": {
+                                                               "@class": "DV_INTERVAL",
+                                                               "lower": {
+                                                                   "@class": "DV_QUANTITY",
+                                                                   "magnitude": 2.5,
+                                                                   "units": "mmol/l"
+                                                               },
+                                                               "upper": {
+                                                                   "@class": "DV_QUANTITY",
+                                                                   "magnitude": 6.6,
+                                                                   "units": "mmol/l"
+                                                               },
+                                                               "lower_unbounded": false,
+                                                               "upper_unbounded": false
+                                                           },
+                                                           "other_reference_ranges": [
+                                                               {
+                                                                   "@class": "REFERENCE_RANGE",
+                                                                   "meaning": {
+                                                                       "@class": "DV_TEXT",
+                                                                       "value": "Age-sex appropriate range"
+                                                                   },
+                                                                   "range": {
+                                                                       "@class": "DV_INTERVAL",
+                                                                       "lower": {
+                                                                           "@class": "DV_QUANTITY",
+                                                                           "magnitude": 2.5,
+                                                                           "units": "mmol/l"
+                                                                       },
+                                                                       "upper": {
+                                                                           "@class": "DV_QUANTITY",
+                                                                           "magnitude": 6.6,
+                                                                           "units": "mmol/l"
+                                                                       },
+                                                                       "lower_unbounded": false,
+                                                                       "upper_unbounded": false
+                                                                   }
+                                                               }
+                                                           ],
+                                                           "normal_status": {
+                                                               "@class": "CODE_PHRASE",
+                                                               "terminology_id": {
+                                                                   "@class": "TERMINOLOGY_ID",
+                                                                   "value": "openehr"
+                                                               },
+                                                               "code_string": "LL"
+                                                           },
+                                                           "magnitude_status": ">=",
+                                                           "magnitude": 7.4,
+                                                           "units": "mmol/l"
+                                                       }
+                                                   }
+                                               ]
+                                           }
+                                       ]
+                                   },
+                                   {
+                                       "@class": "ELEMENT",
+                                       "name": {
+                                           "@class": "DV_TEXT",
+                                           "value": "Conclusion"
+                                       },
+                                       "archetype_node_id": "at0057",
+                                       "value": {
+                                           "@class": "DV_TEXT",
+                                           "value": "Conclusion 24"
+                                       }
+                                   }
+                               ]
+                           }
+                       }
+                   ]
+               }
+           },
+           {
+               "@class": "EVALUATION",
+               "name": {
+                   "@class": "DV_TEXT",
+                   "value": "Patient comment"
+               },
+               "archetype_details": {
+                   "@class": "ARCHETYPED",
+                   "archetype_id": {
+                       "@class": "ARCHETYPE_ID",
+                       "value": "openEHR-EHR-EVALUATION.clinical_synopsis.v1"
+                   },
+                   "rm_version": "1.0.1"
+               },
+               "archetype_node_id": "openEHR-EHR-EVALUATION.clinical_synopsis.v1",
+               "language": {
+                   "@class": "CODE_PHRASE",
+                   "terminology_id": {
+                       "@class": "TERMINOLOGY_ID",
+                       "value": "ISO_639-1"
+                   },
+                   "code_string": "en"
+               },
+               "encoding": {
+                   "@class": "CODE_PHRASE",
+                   "terminology_id": {
+                       "@class": "TERMINOLOGY_ID",
+                       "value": "IANA_character-sets"
+                   },
+                   "code_string": "UTF-8"
+               },
+               "subject": {
+                   "@class": "PARTY_SELF"
+               },
+               "other_participations": [
+                   {
+                       "@class": "PARTICIPATION",
+                       "function": {
+                           "@class": "DV_TEXT",
+                           "value": "requester"
+                       },
+                       "performer": {
+                           "@class": "PARTY_IDENTIFIED",
+                           "external_ref": {
+                               "@class": "PARTY_REF",
+                               "id": {
+                                   "@class": "GENERIC_ID",
+                                   "value": "199",
+                                   "scheme": "HOSPITAL-NS"
+                               },
+                               "namespace": "HOSPITAL-NS",
+                               "type": "ANY"
+                           },
+                           "name": "Dr. Marcus Johnson"
+                       },
+                       "mode": {
+                           "@class": "DV_CODED_TEXT",
+                           "value": "face-to-face communication",
+                           "defining_code": {
+                               "@class": "CODE_PHRASE",
+                               "terminology_id": {
+                                   "@class": "TERMINOLOGY_ID",
+                                   "value": "openehr"
+                               },
+                               "code_string": "216"
+                           }
+                       }
+                   },
+                   {
+                       "@class": "PARTICIPATION",
+                       "function": {
+                           "@class": "DV_TEXT",
+                           "value": "performer"
+                       },
+                       "performer": {
+                           "@class": "PARTY_IDENTIFIED",
+                           "external_ref": {
+                               "@class": "PARTY_REF",
+                               "id": {
+                                   "@class": "GENERIC_ID",
+                                   "value": "198",
+                                   "scheme": "HOSPITAL-NS"
+                               },
+                               "namespace": "HOSPITAL-NS",
+                               "type": "ANY"
+                           },
+                           "name": "Lara Markham"
+                       },
+                       "mode": {
+                           "@class": "DV_CODED_TEXT",
+                           "value": "not specified",
+                           "defining_code": {
+                               "@class": "CODE_PHRASE",
+                               "terminology_id": {
+                                   "@class": "TERMINOLOGY_ID",
+                                   "value": "openehr"
+                               },
+                               "code_string": "193"
+                           }
+                       }
+                   }
+               ],
+               "data": {
+                   "@class": "ITEM_TREE",
+                   "name": {
+                       "@class": "DV_TEXT",
+                       "value": "List"
+                   },
+                   "archetype_node_id": "at0001",
+                   "items": [
+                       {
+                           "@class": "ELEMENT",
+                           "name": {
+                               "@class": "DV_TEXT",
+                               "value": "Comment"
+                           },
+                           "archetype_node_id": "at0002",
+                           "value": {
+                               "@class": "DV_TEXT",
+                               "value": "Comment 21"
+                           }
+                       }
+                   ]
+               }
+           }
+       ]
+   }
+----

@@ -1,0 +1,561 @@
+== Extending the openEHR `ehr` object with `ehr_status.other_details`
+Ian McNicoll <ian@inidus.com>
+v1.0.0, 22-Dec-2017
+
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+
+== The openEHR `ehr` object
+
+http://www.openehr.org/releases/trunk/UML/#Architecture___18_1_83e026d_1433773264340_86424_6770[The `ehr` object] in an openEHR Clinical Data Repository (CDR) is the root container for all for all of the patient clinical data, held within compositions.
+
+An `ehr` is created for each patient when they are registered with the CDR and a new unique `ehr_id` is generated. Normally the `ehr` is also associated with some kind of external identifier, generally known as the `subjectID`.
+In some CDR implementations, such as Think!EHR and EtherCis, this is carried directly in the http://www.openehr.org/releases/trunk/UML/#Architecture___18_1_83e026d_1433773265183_363265_8874[`ehr.ehr_status.subject`] attribute, in others the association between the `ehr_id` and `subjectID` is made externally for security reasons. In either case the CDR service API must provide a means of making the association.
+
+The 'EHR' is otherwise a fairly simple object but does carry the capacity to be extended for local use via the `ehr.ehr_status.other_details` attribute. This is essentially an empty structure which can carry any valid openEHR content.
+
+== Use cases for extending the `ehr` object
+
+=== Use A - Handling multiple patient identifiers
+
+According to the openEHR Reference Model(RM), only a single `subjectId` can be associated directly with the `ehr_id`. It is not uncommon for patients to have multiple identifiers e.g national heath or insurance numbers vs. local hospital numbers (often termed MRN), and for these numbers to become out of sync or for patients to end up with duplicates in the same system e.g multiple NHS numbers. openEHR takes the view that the CDR must be linked to a single 'authoritative' identifier, and that any conflicts or duplications in patient identifiers should be resolved outwith the CDR.
+
+It is possible to add content that will hold multiple patient identifiers e.g hospital numbers via the `ehr.ehr_status.other_details` attribute.
+
+This example could be used to add two local hospital numbers to the `ehr.ehr_status` object.
+
+NOTE: This example applies to the Think!Ehr and EtherCis CDRs which recognise the Marand RAW JSON format.
+Other CDRs may have a slightly different approach.
+
+//[source, json]
+```json
+"otherDetails": {
+  "@class": "ITEM_TREE",
+  "name": {
+    "@class": "DV_TEXT",
+    "value": "Tree"
+  },
+  "archetype_node_id": "at0001",
+  "items": [
+    {
+      "@class": "CLUSTER",
+      "name": {
+        "@class": "DV_TEXT",
+        "value": "Identifiable Person (PARENT)"
+      },
+      "archetype_details": {
+        "@class": "ARCHETYPED",
+        "archetype_id": {
+          "@class": "ARCHETYPE_ID",
+          "value": "openEHR-EHR-CLUSTER.person_identifiable_parent.v0"
+        },
+        "rm_version": "1.0.1"
+      },
+      "archetype_node_id": "openEHR-EHR-CLUSTER.person_identifiable_parent.v0",
+      "items": [
+        {
+          "@class": "ELEMENT",
+          "name": {
+            "@class": "DV_TEXT",
+            "value": "Person Identifier"
+          },
+          "archetype_node_id": "at0001",
+          "value": {
+            "@class": "DV_IDENTIFIER",
+            "issuer": "GOSH",
+            "assigner": "GOSH",
+            "id": "4ff62524-64bb-421d-b664-eea72ef925ee",
+            "type": "GOSH MRN"
+          }
+        },
+        {
+          "@class": "ELEMENT",
+          "name": {
+            "@class": "DV_TEXT",
+            "value": "Person Identifier"
+          },
+          "archetype_node_id": "at0001",
+          "value": {
+            "@class": "DV_IDENTIFIER",
+            "issuer": "GOSH",
+            "assigner": "GOSH",
+            "id": "MRN 12342345",
+            "type": "GOSH ANNEX MRN"
+          }
+        }
+      ]
+    }
+  ]
+},
+```
+//----
+
+=== Use B - Carrying per-patient 'anonymised demographics'
+
+openEHR is designed to allow clear separation between identifiable demographics and the clinical content carried in the CDR with only minimal linkage between.
+Whilst this is theoretically good practice, it does impart a performance overhead when performing population queries such as "give me all female patients with diabetes between 30 and 75".
+In some environments it is reasonable to compromise security by carrying a small number of 'anonymised/pseudo-anonymised' patient demographics inside the patient's EHR object, so that queries do not have to reach out to a separate demographics server.
+
+Definition of what are allowable 'anonymous' patient demographics will need to be decided according to local policy and circumstances but typical data-points would be
+
+- Birth sex
+- Administrative Gender
+- Year of Birth
+- Vital status (alive, dead)
+
+It is possible to store/update this extra patient data as part of the `ehr.ehr_status.other_details` attribute as follows
+
+NOTE: This example applies to the Think!Ehr and EtherCis CDRs which recognise the Marand RAW JSON format.
+Other CDRs may take a slightly different approach.
+
+This example includes the extra patient identifiers discussed in (A).
+
+[source, json]
+----
+"otherDetails": {
+  "@class": "ITEM_TREE",
+  "name": {
+    "@class": "DV_TEXT",
+    "value": "Tree"
+  },
+  "archetype_node_id": "at0001",
+  "items": [
+    {
+      "@class": "CLUSTER",
+      "name": {
+        "@class": "DV_TEXT",
+        "value": "Anonymised person (PARENT)"
+      },
+      "archetype_details": {
+        "@class": "ARCHETYPED",
+        "archetype_id": {
+          "@class": "ARCHETYPE_ID",
+          "value": "openEHR-EHR-CLUSTER.person_anonymised_parent.v0"
+        },
+        "rm_version": "1.0.1"
+      },
+      "archetype_node_id": "openEHR-EHR-CLUSTER.person_anonymised_parent.v0",
+      "items": [
+        {
+          "@class": "ELEMENT",
+          "name": {
+            "@class": "DV_TEXT",
+            "value": "Administrative Gender"
+          },
+          "archetype_node_id": "at0001",
+          "value": {
+            "@class": "DV_CODED_TEXT",
+            "value": "Not known",
+            "defining_code": {
+              "@class": "CODE_PHRASE",
+              "terminology_id": {
+                "@class": "TERMINOLOGY_ID",
+                "value": "local"
+              },
+              "code_string": "at0012"
+            }
+          }
+        },
+        {
+          "@class": "ELEMENT",
+          "name": {
+            "@class": "DV_TEXT",
+            "value": "Birth Sex"
+          },
+          "archetype_node_id": "at0002",
+          "value": {
+            "@class": "DV_CODED_TEXT",
+            "value": "Female",
+            "defining_code": {
+              "@class": "CODE_PHRASE",
+              "terminology_id": {
+                "@class": "TERMINOLOGY_ID",
+                "value": "local"
+              },
+              "code_string": "at0010"
+            }
+          }
+        },
+        {
+          "@class": "ELEMENT",
+          "name": {
+            "@class": "DV_TEXT",
+            "value": "Vital Status"
+          },
+          "archetype_node_id": "at0003",
+          "value": {
+            "@class": "DV_CODED_TEXT",
+            "value": "Alive",
+            "defining_code": {
+              "@class": "CODE_PHRASE",
+              "terminology_id": {
+                "@class": "TERMINOLOGY_ID",
+                "value": "local"
+              },
+              "code_string": "at0004"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "@class": "CLUSTER",
+      "name": {
+        "@class": "DV_TEXT",
+        "value": "Identifiable Person (PARENT)"
+      },
+      "archetype_details": {
+        "@class": "ARCHETYPED",
+        "archetype_id": {
+          "@class": "ARCHETYPE_ID",
+          "value": "openEHR-EHR-CLUSTER.person_identifiable_parent.v0"
+        },
+        "rm_version": "1.0.1"
+      },
+      "archetype_node_id": "openEHR-EHR-CLUSTER.person_identifiable_parent.v0",
+      "items": [
+        {
+          "@class": "ELEMENT",
+          "name": {
+            "@class": "DV_TEXT",
+            "value": "Person Identifier"
+          },
+          "archetype_node_id": "at0001",
+          "value": {
+            "@class": "DV_IDENTIFIER",
+            "issuer": "GOSH",
+            "assigner": "GOSH",
+            "id": "4ff62524-64bb-421d-b664-eea72ef925ee",
+            "type": "GOSH MRN"
+          }
+        },
+        {
+          "@class": "ELEMENT",
+          "name": {
+            "@class": "DV_TEXT",
+            "value": "Person Identifier"
+          },
+          "archetype_node_id": "at0001",
+          "value": {
+            "@class": "DV_IDENTIFIER",
+            "issuer": "GOSH",
+            "assigner": "GOSH",
+            "id": "MRN 12342345",
+            "type": "GOSH ANNEX MRN"
+          }
+        },
+        {
+          "@class": "ELEMENT",
+          "name": {
+            "@class": "DV_TEXT",
+            "value": "Year of Birth"
+          },
+          "archetype_node_id": "at0008",
+          "value": {
+            "@class": "DV_DATE_TIME",
+            "value": "2013"
+          }
+        }
+      ]
+    }
+  ]
+}
+----
+
+=== Adding / updating `ehr.ehr_status.other_details` via the Ehrscape REST API.
+
+In theory it should be possible to add `other_details` as part of the original `POST /ehr` call which creates a new EHR for a patient but this is currently unsupported in Think!EHR and EtherCis.
+
+The workaround (or for updates) is to use the Ehrscape `PUT /ehr` call.
+
+NOTE: You must pass the patient's `ehr_id` as a URL parameter and ensure that correct/current subjectId and namespace are
+populated in the POST body.
+
+[source,json]
+----
+curl -X PUT \
+  https://test.operon.systems/rest/v1/ehr/status/46f24668-d38a-4228-9ec9-5095022d6a8d \
+  -H 'Authorization: Basic xxxxxxxxxxxx' \
+  -H 'Content-Type: application/json' \
+  -d ' {
+        "subjectId": "1316025",
+        "subjectNamespace": "uk.nhs.nhs_number",
+        "otherDetails": {
+      "@class": "ITEM_TREE",
+      "name": {
+          "@class": "DV_TEXT",
+          "value": "Tree"
+      },
+      "archetype_node_id": "at0001",
+      "items": [
+          {
+              "@class": "CLUSTER",
+              "name": {
+                  "@class": "DV_TEXT",
+                  "value": "Anonymised person (PARENT)"
+              },
+              "archetype_details": {
+                  "@class": "ARCHETYPED",
+                  "archetype_id": {
+                      "@class": "ARCHETYPE_ID",
+                      "value": "openEHR-EHR-CLUSTER.person_anonymised_parent.v0"
+                  },
+                  "rm_version": "1.0.1"
+              },
+              "archetype_node_id": "openEHR-EHR-CLUSTER.person_anonymised_parent.v0",
+              "items": [
+                  {
+                      "@class": "ELEMENT",
+                      "name": {
+                          "@class": "DV_TEXT",
+                          "value": "Administrative Gender"
+                      },
+                      "archetype_node_id": "at0001",
+                      "value": {
+                          "@class": "DV_CODED_TEXT",
+                          "value": "Not known",
+                          "defining_code": {
+                              "@class": "CODE_PHRASE",
+                              "terminology_id": {
+                                  "@class": "TERMINOLOGY_ID",
+                                  "value": "local"
+                              },
+                              "code_string": "at0012"
+                          }
+                      }
+                  },
+                  {
+                      "@class": "ELEMENT",
+                      "name": {
+                          "@class": "DV_TEXT",
+                          "value": "Birth Sex"
+                      },
+                      "archetype_node_id": "at0002",
+                      "value": {
+                          "@class": "DV_CODED_TEXT",
+                          "value": "Female",
+                          "defining_code": {
+                              "@class": "CODE_PHRASE",
+                              "terminology_id": {
+                                  "@class": "TERMINOLOGY_ID",
+                                  "value": "local"
+                              },
+                              "code_string": "at0010"
+                          }
+                      }
+                  },
+                  {
+                      "@class": "ELEMENT",
+                      "name": {
+                          "@class": "DV_TEXT",
+                          "value": "Vital Status"
+                      },
+                      "archetype_node_id": "at0003",
+                      "value": {
+                          "@class": "DV_CODED_TEXT",
+                          "value": "Alive",
+                          "defining_code": {
+                              "@class": "CODE_PHRASE",
+                              "terminology_id": {
+                                  "@class": "TERMINOLOGY_ID",
+                                  "value": "local"
+                              },
+                              "code_string": "at0004"
+                          }
+                      }
+                  }
+              ]
+          },
+          {
+              "@class": "CLUSTER",
+              "name": {
+                  "@class": "DV_TEXT",
+                  "value": "Identifiable Person (PARENT)"
+              },
+              "archetype_details": {
+                  "@class": "ARCHETYPED",
+                  "archetype_id": {
+                      "@class": "ARCHETYPE_ID",
+                      "value": "openEHR-EHR-CLUSTER.person_identifiable_parent.v0"
+                  },
+                  "rm_version": "1.0.1"
+              },
+              "archetype_node_id": "openEHR-EHR-CLUSTER.person_identifiable_parent.v0",
+              "items": [
+                  {
+                      "@class": "ELEMENT",
+                      "name": {
+                          "@class": "DV_TEXT",
+                          "value": "Person Identifier"
+                      },
+                      "archetype_node_id": "at0001",
+                      "value": {
+                          "@class": "DV_IDENTIFIER",
+                          "issuer": "GOSH",
+                          "assigner": "GOSH",
+                          "id": "4ff62524-64bb-421d-b664-eea72ef925ee",
+                          "type": "GOSH MRN"
+                      }
+                  },
+                   {
+                      "@class": "ELEMENT",
+                      "name": {
+                          "@class": "DV_TEXT",
+                          "value": "Person Identifier"
+                      },
+                      "archetype_node_id": "at0001",
+                      "value": {
+                          "@class": "DV_IDENTIFIER",
+                          "issuer": "GOSH",
+                          "assigner": "GOSH",
+                          "id": "MRN 12342345",
+                          "type": "GOSH ANNEX MRN"
+                      }
+                  },
+                  {
+                      "@class": "ELEMENT",
+                      "name": {
+                          "@class": "DV_TEXT",
+                          "value": "Year of Birth"
+                      },
+                      "archetype_node_id": "at0008",
+                      "value": {
+                          "@class": "DV_DATE_TIME",
+                          "value": "2013"
+                      }
+                  }
+              ]
+          }
+      ]
+  },
+        "queryable": true,
+        "modifiable": true
+    }'
+----
+
+=== Internal valuesets
+
+Some of the elements in this example must carry one of these specific values, which need to ba applied before submitting the POST/PUT body.
+
+Vital Status::
+|===
+|value|code_string
+
+|Alive
+|at0004
+
+|Dead
+|at0005
+|===
+
+Birth Sex::
+|===
+|value |code_string
+
+|Male
+|at0009
+
+|Female
+|at0010
+
+|Indeterminate
+|at0011
+
+|Unknown
+|at0012
+|===
+
+Administrative Gender::
+|===
+|value |code_string
+
+|Male
+|at0009
+
+|Female
+|at0010
+
+|Indeterminate
+|at0011
+
+|Unknown
+|at0012
+|===
+
+Example:
+[source,json]
+----
+{
+    "@class": "ELEMENT",
+    "name": {
+        "@class": "DV_TEXT",
+        "value": "Vital Status"
+    },
+    "archetype_node_id": "at0003",
+    "value": {
+        "@class": "DV_CODED_TEXT",
+        "value": "{{value}}", // <1>
+        "defining_code": {
+            "@class": "CODE_PHRASE",
+            "terminology_id": {
+                "@class": "TERMINOLOGY_ID",
+                "value": "local"
+            },
+            "code_string": "{{code_string}}" // <2>
+        }
+    }
+}
+----
+<1> Replace the `value` here
+<2> Replace the `code_string` here
+
+== How do I define or adapt the `other_details` structure definition?
+
+The `other_details` structure is pure openEHR `RAW JSON` but unlike openEHR compositions is not backed by a specific openEHR template i.e there is no equivalent design-time definition or run-time validation against that template.
+
+As long as the data structure is valid against the openEHR RM it should be accepted and can be built by hand.
+
+An alternative approach is to create a dummy openEHR Composition Template which carries the equivalent structure inside the `other_context` attribute of the composition.
+
+This template can then be used to generate dummy composition example via the Ehrscape `GET composition example` call and converted to RAW JSON. The resulting structure can then be cut and pasted out of the Composition instance and grafted into the `ehr_status` json object.
+
+Quite a roundabout exercise but generally only needs to be done once for each CDR!!
+
+
+== How do I query data in the `other_details` structure?
+
+The instance data in the `ehr.ehr_status_other_details` structure is regular openEHR data and can be queryed via openEHR 'AQL' using full path to the data required.
+
+AQL Example:: This example retrieves the ehr_id for given local MRN and type.
+
+NOTE:: The Select clauses for localId and localIdType are not strictly necessary
+[source, sql]
+----
+select e/ehr_id/value as ehrId,
+  e/ehr_status/other_details/items[openEHR-EHR-CLUSTER.person_identifiable_parent.v0]/items[at0001]/value/id as localId,
+  e/ehr_status/other_details/items[openEHR-EHR-CLUSTER.person_identifiable_parent.v0]/items[at0001]/value/type as localIdType
+from EHR e
+WHERE
+ e/ehr_status/other_details/items[openEHR-EHR-CLUSTER.person_identifiable_parent.v0]/items[at0001]/value/id = 'MRN 12342345'
+AND
+ e/ehr_status/other_details/items[openEHR-EHR-CLUSTER.person_identifiable_parent.v0]/items[at0001]/value/type = 'GOSH Annex MRN'
+----
+
+will return
+
+[source, json]
+----
+{"resultSet": [
+       {
+           "localIdType": "GOSH ANNEX MRN",
+           "ehrId": "b0397da7-9240-4ca2-a76c-dcbeecd93921",
+           "localId": "MRN 12342345"
+       }
+]
+}
+----
