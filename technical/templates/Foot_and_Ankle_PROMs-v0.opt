@@ -52,7 +52,7 @@
             <upper>1</upper>
         </occurrences>
         <node_id>at0000</node_id>
-        <attributes xsi:type="C_SINGLE_ATTRIBUTE" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <attributes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="C_SINGLE_ATTRIBUTE">
             <rm_attribute_name>category</rm_attribute_name>
             <existence>
                 <lower_included>true</lower_included>
@@ -102,7 +102,7 @@
                 </attributes>
             </children>
         </attributes>
-        <attributes xsi:type="C_SINGLE_ATTRIBUTE" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <attributes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="C_SINGLE_ATTRIBUTE">
             <rm_attribute_name>context</rm_attribute_name>
             <existence>
                 <lower_included>true</lower_included>
@@ -330,7 +330,7 @@
                 </attributes>
             </children>
         </attributes>
-        <attributes xsi:type="C_MULTIPLE_ATTRIBUTE" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <attributes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="C_MULTIPLE_ATTRIBUTE">
             <rm_attribute_name>content</rm_attribute_name>
             <existence>
                 <lower_included>true</lower_included>
@@ -941,7 +941,7 @@
                                         <precedence_overridden>false</precedence_overridden>
                                         <left_operand xsi:type="EXPR_LEAF">
                                             <type>String</type>
-                                            <item xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema">archetype_id/value</item>
+                                            <item xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:string">archetype_id/value</item>
                                             <reference_type>attribute</reference_type>
                                         </left_operand>
                                         <right_operand xsi:type="EXPR_LEAF">
@@ -1387,7 +1387,7 @@
                                         <precedence_overridden>false</precedence_overridden>
                                         <left_operand xsi:type="EXPR_LEAF">
                                             <type>String</type>
-                                            <item xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema">archetype_id/value</item>
+                                            <item xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:string">archetype_id/value</item>
                                             <reference_type>attribute</reference_type>
                                         </left_operand>
                                         <right_operand xsi:type="EXPR_LEAF">

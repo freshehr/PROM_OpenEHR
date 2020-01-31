@@ -23,6 +23,5 @@ contains (
     OBSERVATION b_a[openEHR-EHR-OBSERVATION.aofas.v0] and
     CLUSTER b_b[openEHR-EHR-CLUSTER.episode_details_northproms.v0])
 where
-    a/name/value='UCLH Foot and ankle PROMs' and
-    e/ehr_id/value='6ad6c847-7c37-485d-8dbb-7b56d1c23918'
+    a/name/value='UCLH Foot and ankle PROMs'
 order by e/ehr_id/value, a/context/start_time/value desc
